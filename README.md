@@ -1,10 +1,14 @@
 # 🎫 Smart Support Ticket Classifier
 
-An **AI-powered, multi-stage agentic pipeline** that classifies customer support tickets and automatically takes intelligent actions using OpenAI's function calling capabilities.
+An **AI-powered, multi-stage agentic pipeline** that classifies customer support tickets and automatically takes intelligent actions using **function calling** capabilities.
+
+## 📸 Demo
+
+![Smart Ticket Classifier Demo](screenshots/demo.png)
 
 ## What Makes This Different
 
-Most ticket classifiers are simple OpenAI wrappers. This project implements a **two-stage agentic pipeline**:
+Most ticket classifiers are simple AI wrappers. This project implements a **two-stage agentic pipeline**:
 
 ```
 Ticket Input
@@ -12,7 +16,7 @@ Ticket Input
 [Stage 1] Classifier Agent
     → category, priority, sentiment, confidence, keywords
     ↓
-[Stage 2] Action Agent (OpenAI function calling)
+[Stage 2] Action Agent (Function Calling)
     → Tool: auto_respond(draft_reply)        ← drafts customer reply
     → Tool: escalate_ticket(team, reason)    ← routes to human if needed
     → Tool: tag_ticket(tags[])               ← adds CRM tags
@@ -25,38 +29,34 @@ Ticket Input
 
 ## 🚀 Quick Start
 
-### Option 1: Local Development
+### Option 1: Docker (One Command)
+
+```bash
+git clone https://github.com/janarthvasan-0105/smart-ticket-classifier.git
+cd smart-ticket-classifier
+docker-compose up --build
+```
+
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000
+- **API Docs:** http://localhost:8000/docs
+
+### Option 2: Local Development
 
 ```bash
 # 1. Install Python dependencies
 cd backend
 pip install -r requirements.txt
 
-# 2. Set up environment variables
-cp ../.env.example ../.env
-# Edit .env and add your OpenAI API key
-
-# 3. Start the backend server
+# 2. Start the backend server
 uvicorn main:app --reload --port 8000
 
-# 4. Open the frontend
-# Open frontend/index.html in your browser
-# Or serve it: npx serve ../frontend -p 3000
+# 3. Serve the frontend (in a new terminal)
+cd frontend
+python -m http.server 3000
 ```
 
-### Option 2: Docker (One Command)
-
-```bash
-# Set your OpenAI API key
-export OPENAI_API_KEY=sk-your-key-here
-
-# Start everything
-docker-compose up --build
-```
-
-- **Backend:** http://localhost:8000
-- **Frontend:** http://localhost:3000 (Docker) or open `frontend/index.html` directly
-- **API Docs:** http://localhost:8000/docs
+Then open http://localhost:3000 and enter your **free Groq API key** (get one at [console.groq.com](https://console.groq.com)).
 
 ## 📡 API Endpoints
 
@@ -73,9 +73,9 @@ docker-compose up --build
 ### Example Request
 
 ```bash
-curl -X POST http://localhost:8000/classify?model=gpt-4o-mini \
+curl -X POST http://localhost:8000/classify?model=llama-3.3-70b-versatile \
   -H "Content-Type: application/json" \
-  -H "X-Openai-Key: sk-your-key" \
+  -H "X-Openai-Key: gsk-your-groq-key" \
   -d '{"message": "I have been charged twice this month!", "ticket_id": "TKT-042"}'
 ```
 
@@ -109,8 +109,8 @@ curl -X POST http://localhost:8000/classify?model=gpt-4o-mini \
 └─────────────────────────────────────────────────────┘
                      │
               ┌──────▼──────┐
-              │   OpenAI    │
-              │  GPT-4o-mini│
+              │  Groq API   │
+              │ Llama 3.3   │
               └─────────────┘
 ```
 
@@ -119,8 +119,8 @@ curl -X POST http://localhost:8000/classify?model=gpt-4o-mini \
 | Component | Technology |
 |-----------|-----------|
 | Backend | Python 3.12, FastAPI, Pydantic v2 |
-| AI/ML | OpenAI GPT-4o-mini, Function Calling |
-| Frontend | React 18 (CDN), Vanilla CSS |
+| AI/ML | Groq API, Llama 3.3 70B, Function Calling |
+| Frontend | React 18 (CDN), Claymorphism CSS |
 | Deployment | Docker, Docker Compose, Nginx |
 
 ## 📋 Features
@@ -131,11 +131,15 @@ curl -X POST http://localhost:8000/classify?model=gpt-4o-mini \
 - **Real-time stats** — priority/category breakdown, escalation count
 - **5-tab result view** — Overview, Agent Actions, Draft Reply, Raw JSON, Code
 - **Dark mode** — toggle between light and dark themes
+- **Claymorphism UI** — modern puffy 3D design with soft shadows
 - **Copy buttons** — one-click copy for draft replies and code snippets
 - **Priority color coding** — visual urgency indicators
 - **Escalation alerts** — prominent banner for escalated tickets
-- **Responsive design** — works on desktop and tablet
 
 ---
 
-*Built as an AI agent interview task demonstration — showcasing OpenAI function calling, agentic pipelines, and full-stack development.*
+*Built as an AI agent interview task demonstration — showcasing function calling, agentic pipelines, and full-stack development.*
+
+
+
+
