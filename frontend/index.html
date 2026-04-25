@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Ticket Classifier</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#e8e0f0;--surface:#ede6f6;--surface2:#f5effe;--border:rgba(255,255,255,.5);
+  --text:#2d1b4e;--text2:#6b5a8a;--accent:#8b5cf6;--accent2:#a78bfa;
+  --green:#4ade80;--red:#f87171;--orange:#fb923c;--yellow:#facc15;--cyan:#22d3ee;
+  --shadow-out:8px 8px 16px rgba(166,152,190,.45),-8px -8px 16px rgba(255,255,255,.8);
+  --shadow-in:inset 4px 4px 8px rgba(166,152,190,.3),inset -4px -4px 8px rgba(255,255,255,.7);
+  --shadow-btn:6px 6px 12px rgba(120,80,200,.35),-6px -6px 12px rgba(255,255,255,.7);
+  font-family:'Outfit',sans-serif
+}
+.dark{
+  --bg:#1e1a2e;--surface:#262040;--surface2:#302850;--border:rgba(255,255,255,.06);
+  --text:#e8e0f6;--text2:#a090c0;
+  --shadow-out:8px 8px 16px rgba(10,8,20,.6),-8px -8px 16px rgba(60,50,90,.25);
+  --shadow-in:inset 4px 4px 8px rgba(10,8,20,.4),inset -4px -4px 8px rgba(60,50,90,.2);
+  --shadow-btn:6px 6px 12px rgba(10,8,20,.5),-6px -6px 12px rgba(60,50,90,.2);
+}
+body{background:var(--bg);color:var(--text);min-height:100vh;transition:all .4s}
+.app{display:grid;grid-template-columns:270px 1fr;grid-template-rows:72px 1fr;height:100vh;overflow:hidden}
+
+/* HEADER */
+header{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:0 28px;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  box-shadow:0 4px 12px rgba(120,80,200,.1)}
+.logo{display:flex;align-items:center;gap:12px;font-size:20px;font-weight:800;letter-spacing:-.5px}
+.logo-icon{width:40px;height:40px;border-radius:14px;background:linear-gradient(135deg,#8b5cf6,#c084fc);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  box-shadow:4px 4px 10px rgba(139,92,246,.35),-3px -3px 8px rgba(255,255,255,.15)}
+.logo span{background:linear-gradient(135deg,var(--accent),#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.theme-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  padding:10px 18px;border-radius:16px;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit;
+  box-shadow:var(--shadow-out);transition:all .2s}
+.theme-btn:hover{transform:translateY(-1px)}
+.theme-btn:active{box-shadow:var(--shadow-in)}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:20px;overflow-y:auto;
+  display:flex;flex-direction:column;gap:18px}
+.clay{background:var(--surface2);border:1px solid var(--border);border-radius:20px;
+  box-shadow:var(--shadow-out);transition:all .25s}
+.clay:hover{transform:translateY(-2px)}
+.clay-in{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow-in)}
+.stat-card{padding:16px;text-align:center}
+.stat-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:4px}
+.stat-value{font-size:28px;font-weight:800}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.section-title{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-bottom:6px}
+.history-item{padding:10px 14px;border-radius:14px;cursor:pointer;font-size:13px;font-weight:500;
+  display:flex;justify-content:space-between;align-items:center;transition:all .2s;margin-bottom:4px;
+  background:var(--surface2);border:1px solid var(--border);box-shadow:var(--shadow-out)}
+.history-item:hover{transform:translateY(-1px)}.history-item:active{box-shadow:var(--shadow-in)}
+.history-item.active{box-shadow:var(--shadow-in);transform:translateY(0)}
+.history-item .id{font-weight:700;color:var(--accent)}
+.clear-btn{background:var(--surface2);border:1px solid var(--border);color:var(--red);
+  padding:10px;border-radius:14px;cursor:pointer;font-size:12px;font-weight:600;width:100%;
+  margin-top:6px;font-family:inherit;box-shadow:var(--shadow-out);transition:all .2s}
+.clear-btn:hover{transform:translateY(-1px)}.clear-btn:active{box-shadow:var(--shadow-in)}
+
+/* MAIN */
+.main{padding:24px;overflow-y:auto}
+.classify-panel{padding:28px;margin-bottom:24px}
+.classify-panel h2{font-size:18px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+.input-row{display:grid;grid-template-columns:1fr 180px;gap:12px;margin-bottom:14px}
+.clay-input{background:var(--surface);border:1px solid var(--border);color:var(--text);
+  padding:12px 16px;border-radius:14px;font-size:14px;font-family:inherit;
+  box-shadow:var(--shadow-in);transition:all .2s;width:100%}
+.clay-input:focus{outline:none;box-shadow:var(--shadow-in),0 0 0 3px rgba(139,92,246,.2)}
+select.clay-input{cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='3'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+textarea.clay-input{min-height:110px;resize:vertical}
+.btn-primary{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;border:none;
+  padding:14px 32px;border-radius:16px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+  box-shadow:var(--shadow-btn);transition:all .2s;letter-spacing:.3px}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:8px 8px 18px rgba(120,80,200,.4),-6px -6px 14px rgba(255,255,255,.5)}
+.btn-primary:active{transform:translateY(0);box-shadow:var(--shadow-in)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.samples-title{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin:20px 0 10px}
+.samples-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.sample-card{padding:12px 14px;font-size:12px;cursor:pointer;line-height:1.5;color:var(--text2)}
+.sample-card:active{box-shadow:var(--shadow-in);transform:translateY(0)}
+.sample-card strong{color:var(--accent);display:block;margin-bottom:3px;font-size:11px;font-weight:700}
+
+/* LOADING */
+.loading{text-align:center;padding:48px;color:var(--text2)}
+.spinner{width:44px;height:44px;border:4px solid var(--surface2);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 18px;
+  box-shadow:var(--shadow-out)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading .stage{font-size:15px;font-weight:600;margin-top:10px;color:var(--accent2)}
+
+/* RESULT */
+.result-panel{overflow:hidden}
+.escalation-banner{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;
+  padding:14px 22px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:10px;
+  border-radius:20px 20px 0 0}
+.tabs{display:flex;gap:4px;padding:8px 12px;background:var(--surface);border-bottom:1px solid var(--border)}
+.tab{padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;color:var(--text2);
+  border-radius:12px;transition:all .2s;border:1px solid transparent}
+.tab:hover{color:var(--text);background:var(--surface2)}
+.tab.active{color:var(--accent);background:var(--surface2);border-color:var(--border);box-shadow:var(--shadow-in)}
+.tab-content{padding:24px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:6px 14px;border-radius:12px;font-size:12px;font-weight:700;
+  box-shadow:3px 3px 6px rgba(0,0,0,.08),-2px -2px 4px rgba(255,255,255,.4)}
+.badge-critical{background:#fecaca;color:#b91c1c}.badge-high{background:#fed7aa;color:#c2410c}
+.badge-medium{background:#fef08a;color:#a16207}.badge-low{background:#bbf7d0;color:#15803d}
+.dark .badge-critical{background:#7f1d1d;color:#fca5a5}.dark .badge-high{background:#7c2d12;color:#fdba74}
+.dark .badge-medium{background:#713f12;color:#fde047}.dark .badge-low{background:#14532d;color:#86efac}
+.badge-cat{background:rgba(139,92,246,.15);color:var(--accent)}
+
+.overview-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.overview-card{padding:18px}
+.overview-card h4{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:8px}
+.confidence-bar{height:10px;border-radius:8px;overflow:hidden;margin-top:8px;box-shadow:var(--shadow-in)}
+.confidence-fill{height:100%;border-radius:8px;transition:width 1s ease;
+  background:linear-gradient(90deg,var(--accent),#c084fc)}
+.keywords{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{padding:5px 12px;border-radius:10px;font-size:11px;font-weight:600;color:var(--text2)}
+
+.action-card{padding:18px;margin-bottom:12px}
+.action-card h4{font-size:14px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.action-card p{font-size:13px;color:var(--text2);line-height:1.6}
+.draft-box{padding:22px;font-size:14px;line-height:1.8;white-space:pre-wrap}
+.copy-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);
+  padding:8px 16px;border-radius:12px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;
+  margin-top:14px;box-shadow:var(--shadow-out);transition:all .2s}
+.copy-btn:hover{transform:translateY(-1px);color:var(--accent)}
+.copy-btn:active{box-shadow:var(--shadow-in);transform:translateY(0)}
+pre{border-radius:14px;padding:18px;font-size:12px;overflow-x:auto;line-height:1.6;
+  color:var(--cyan);white-space:pre-wrap;word-break:break-all}
+.code-section{margin-bottom:18px}
+.code-section h4{font-size:13px;font-weight:700;margin-bottom:10px;color:var(--text2)}
+.sentiment-emoji{font-size:24px}
+.priority-border-Critical{border-left:5px solid var(--red)}
+.priority-border-High{border-left:5px solid var(--orange)}
+.priority-border-Medium{border-left:5px solid var(--yellow)}
+.priority-border-Low{border-left:5px solid var(--green)}
+.meta-row{display:flex;gap:18px;margin-top:16px;font-size:12px;color:var(--text2);font-weight:600}
+.meta-row span{display:flex;align-items:center;gap:5px;padding:6px 12px;border-radius:10px}
+.cat-row{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;color:var(--text2)}
+.cat-row span:last-child{font-weight:700;color:var(--text)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script type="text/babel">
+const {useState,useEffect} = React;
+const API = 'http://localhost:8000';
+const SE = {Angry:'😡',Frustrated:'😤',Neutral:'😐',Satisfied:'😊',Positive:'🤩'};
+const PC = {Critical:'badge-critical',High:'badge-high',Medium:'badge-medium',Low:'badge-low'};
+
+function App(){
+  const [dark,setDark]=useState(false);
+  const [apiKey,setApiKey]=useState('');
+  const [model,setModel]=useState('llama-3.3-70b-versatile');
+  const [message,setMessage]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [stage,setStage]=useState('');
+  const [result,setResult]=useState(null);
+  const [tab,setTab]=useState(0);
+  const [history,setHistory]=useState([]);
+  const [stats,setStats]=useState({total:0,by_priority:{},by_category:{},escalated:0,avg_confidence:0});
+  const [samples,setSamples]=useState([]);
+  const [selId,setSelId]=useState(null);
+
+  useEffect(()=>{document.body.className=dark?'dark':''},[dark]);
+  useEffect(()=>{
+    fetch(API+'/samples').then(r=>r.json()).then(d=>setSamples(d.samples||[])).catch(()=>{});
+    refresh();
+  },[]);
+
+  const refresh=()=>{
+    fetch(API+'/stats').then(r=>r.json()).then(setStats).catch(()=>{});
+    fetch(API+'/tickets').then(r=>r.json()).then(d=>setHistory((d.tickets||[]).reverse())).catch(()=>{});
+  };
+
+  const classify=async()=>{
+    if(!apiKey||!message.trim())return;
+    setLoading(true);setResult(null);setTab(0);setStage('Stage 1: Classifying ticket...');
+    try{
+      setTimeout(()=>setStage('Stage 2: Agent taking actions...'),2000);
+      const res=await fetch(API+'/classify?model='+model,{
+        method:'POST',headers:{'Content-Type':'application/json','X-Openai-Key':apiKey},
+        body:JSON.stringify({message,ticket_id:'TKT-'+String(Date.now()).slice(-4)})
+      });
+      if(!res.ok){const e=await res.json();throw new Error(e.detail||'API error');}
+      const data=await res.json();
+      setResult(data);setSelId(data.ticket.id);refresh();
+    }catch(e){alert('Error: '+e.message);}
+    finally{setLoading(false);setStage('');}
+  };
+
+  const viewHist=(t)=>{setResult({ticket:t,tokens_used:0,model:'',processing_time_ms:0});setSelId(t.id);setTab(0);};
+  const clearAll=async()=>{await fetch(API+'/tickets',{method:'DELETE'});setHistory([]);setResult(null);
+    setStats({total:0,by_priority:{},by_category:{},escalated:0,avg_confidence:0});};
+  const copy=(t)=>navigator.clipboard.writeText(t);
+
+  const tk=result?.ticket, cl=tk?.classification;
+  const tabs=['Overview','Agent Actions','Draft Reply','Raw JSON','Code'];
+
+  return(
+    <div className="app">
+      <header>
+        <div className="logo"><div className="logo-icon">🎫</div><span>Smart Ticket Classifier</span></div>
+        <button className="theme-btn" onClick={()=>setDark(!dark)}>{dark?'☀️ Light Mode':'🌙 Dark Mode'}</button>
+      </header>
+
+      <aside className="sidebar">
+        <div><div className="section-title">Dashboard Stats</div>
+          <div className="stat-grid">
+            <div className="clay stat-card"><div className="stat-label">Total</div><div className="stat-value">{stats.total}</div></div>
+            <div className="clay stat-card"><div className="stat-label">Escalated</div><div className="stat-value" style={{color:'var(--red)'}}>{stats.escalated||0}</div></div>
+            <div className="clay stat-card"><div className="stat-label">Avg Conf.</div><div className="stat-value">{stats.avg_confidence||'—'}%</div></div>
+            <div className="clay stat-card"><div className="stat-label">Critical</div><div className="stat-value" style={{color:'var(--red)'}}>{stats.by_priority?.Critical||0}</div></div>
+          </div>
+        </div>
+
+        {stats.by_category && Object.keys(stats.by_category).length>0 && (
+          <div className="clay" style={{padding:16}}>
+            <div className="section-title">By Category</div>
+            {Object.entries(stats.by_category).map(([k,v])=>(
+              <div key={k} className="cat-row"><span>{k}</span><span>{v}</span></div>
+            ))}
+          </div>
+        )}
+
+        <div>
+          <div className="section-title">History ({history.length})</div>
+          {history.map(t=>(
+            <div key={t.id} className={'history-item'+(selId===t.id?' active':'')} onClick={()=>viewHist(t)}>
+              <span className="id">{t.id}</span>
+              <span className={'badge '+PC[t.classification?.priority]}>{t.classification?.priority||'…'}</span>
+            </div>
+          ))}
+          {history.length>0&&<button className="clear-btn" onClick={clearAll}>🗑️ Clear All</button>}
+        </div>
+      </aside>
+
+      <main className="main">
+        <div className="clay classify-panel">
+          <h2>🧠 Classify a Support Ticket</h2>
+          <div className="input-row">
+            <input type="password" className="clay-input" placeholder="Groq API Key (gsk_...)" value={apiKey} onChange={e=>setApiKey(e.target.value)} id="api-key-input"/>
+            <select className="clay-input" value={model} onChange={e=>setModel(e.target.value)} id="model-select">
+              <option value="llama-3.3-70b-versatile">Llama 3.3 70B</option>
+              <option value="llama-3.1-8b-instant">Llama 3.1 8B</option>
+              <option value="mixtral-8x7b-32768">Mixtral 8x7B</option>
+            </select>
+          </div>
+          <textarea className="clay-input" placeholder="Paste a customer support message here..." value={message} onChange={e=>setMessage(e.target.value)} id="ticket-input"/>
+          <button className="btn-primary" onClick={classify} disabled={loading||!apiKey||!message.trim()} id="classify-btn">
+            {loading?'⏳ Processing...':'🚀 Classify Ticket'}
+          </button>
+          <div className="samples-title">💡 Sample Tickets — click to load</div>
+          <div className="samples-grid">
+            {samples.map(s=>(
+              <div key={s.id} className="clay sample-card" onClick={()=>setMessage(s.message)}>
+                <strong>{s.id}</strong>{s.message.slice(0,70)}…
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {loading&&<div className="loading"><div className="spinner"/><div className="stage">{stage}</div></div>}
+
+        {tk&&!loading&&(
+          <div className={'clay result-panel priority-border-'+(cl?.priority||'')}>
+            {cl?.escalate&&<div className="escalation-banner">⚠️ Escalated to {tk.assigned_team||'support'} team — {cl.priority} priority</div>}
+            <div className="tabs">
+              {tabs.map((n,i)=><div key={i} className={'tab'+(tab===i?' active':'')} onClick={()=>setTab(i)}>{n}</div>)}
+            </div>
+            <div className="tab-content">
+              {tab===0&&cl&&(<div>
+                <div className="overview-grid">
+                  <div className="clay-in overview-card"><h4>Category</h4><span className="badge badge-cat">{cl.category}</span></div>
+                  <div className="clay-in overview-card"><h4>Priority</h4><span className={'badge '+PC[cl.priority]}>{cl.priority}</span></div>
+                  <div className="clay-in overview-card"><h4>Sentiment</h4><span className="sentiment-emoji">{SE[cl.sentiment]}</span> {cl.sentiment}</div>
+                  <div className="clay-in overview-card"><h4>Confidence</h4><div style={{fontSize:22,fontWeight:800}}>{cl.confidence}%</div>
+                    <div className="confidence-bar"><div className="confidence-fill" style={{width:cl.confidence+'%'}}/></div></div>
+                </div>
+                <div className="clay-in overview-card" style={{marginTop:14}}><h4>Summary</h4><p style={{fontSize:14,lineHeight:1.7}}>{cl.summary}</p></div>
+                <div className="clay-in overview-card" style={{marginTop:10}}><h4>Keywords</h4>
+                  <div className="keywords">{cl.keywords.map((k,i)=><span key={i} className="clay-in chip">{k}</span>)}</div></div>
+                {result.tokens_used>0&&<div className="meta-row">
+                  <span className="clay-in">🪙 {result.tokens_used} tokens</span>
+                  <span className="clay-in">⚡ {result.processing_time_ms}ms</span>
+                  <span className="clay-in">🤖 {result.model}</span>
+                  <span className="clay-in">⏱️ SLA: {tk.sla_deadline_hours}h</span>
+                </div>}
+              </div>)}
+
+              {tab===1&&(<div>
+                {tk.agent_actions.map((a,i)=>(<div key={i} className="clay-in action-card">
+                  <h4>{a.action_type==='auto_respond'&&'💬 Auto Respond'}{a.action_type==='escalate'&&'🚨 Escalate'}
+                    {a.action_type==='tag'&&'🏷️ Tag Ticket'}{a.action_type==='set_sla'&&'⏱️ Set SLA'}</h4>
+                  <p>{a.reasoning}</p><pre className="clay-in" style={{marginTop:8,fontSize:11}}>{JSON.stringify(a.payload,null,2)}</pre>
+                </div>))}
+                {tk.agent_actions.length===0&&<p style={{color:'var(--text2)'}}>No agent actions.</p>}
+              </div>)}
+
+              {tab===2&&(<div>
+                <div className="clay-in draft-box">{tk.draft_reply||'No draft reply generated.'}</div>
+                {tk.draft_reply&&<button className="copy-btn" onClick={()=>copy(tk.draft_reply)}>📋 Copy Reply</button>}
+              </div>)}
+
+              {tab===3&&(<div>
+                <pre className="clay-in">{JSON.stringify(result,null,2)}</pre>
+                <button className="copy-btn" onClick={()=>copy(JSON.stringify(result,null,2))}>📋 Copy JSON</button>
+              </div>)}
+
+              {tab===4&&(<div>
+                <div className="code-section"><h4>Python</h4>
+                  <pre className="clay-in">{`import requests\n\nresponse = requests.post(\n    "http://localhost:8000/classify?model=${model}",\n    headers={\n        "Content-Type": "application/json",\n        "X-Openai-Key": "your-api-key"\n    },\n    json={\n        "message": ${JSON.stringify(tk.message)},\n        "ticket_id": "${tk.id}"\n    }\n)\nprint(response.json())`}</pre>
+                  <button className="copy-btn" onClick={()=>copy(`import requests\nresponse = requests.post("http://localhost:8000/classify?model=${model}",headers={"Content-Type":"application/json","X-Openai-Key":"your-key"},json={"message":${JSON.stringify(tk.message)}})\nprint(response.json())`)}>📋 Copy Python</button>
+                </div>
+                <div className="code-section"><h4>JavaScript</h4>
+                  <pre className="clay-in">{`const res = await fetch(\n  "http://localhost:8000/classify?model=${model}",\n  {\n    method: "POST",\n    headers: {\n      "Content-Type": "application/json",\n      "X-Openai-Key": "your-api-key"\n    },\n    body: JSON.stringify({\n      message: ${JSON.stringify(tk.message)},\n      ticket_id: "${tk.id}"\n    })\n  }\n);\nconst data = await res.json();`}</pre>
+                  <button className="copy-btn" onClick={()=>copy(`const res=await fetch("http://localhost:8000/classify?model=${model}",{method:"POST",headers:{"Content-Type":"application/json","X-Openai-Key":"your-key"},body:JSON.stringify({message:${JSON.stringify(tk.message)}})});\nconst data=await res.json();`)}>📋 Copy JS</button>
+                </div>
+              </div>)}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
